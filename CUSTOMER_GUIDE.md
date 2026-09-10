@@ -2,7 +2,7 @@
 
 ## Purpose of the demonstration
 
-This demonstration evaluates whether analyses previously distributed across two Parasoft C/C++test Standard servers can be consolidated onto one C/C++test Professional Automation host.
+This demonstration evaluates whether analyses distributed across multiple Parasoft C/C++test Standard workers can be consolidated onto one C/C++test Professional Automation host. The customer comparison below addresses three existing Docker workers.
 
 The test runs three different C projects concurrently:
 
@@ -13,6 +13,113 @@ The test runs three different C projects concurrently:
 | Network Command Queue | SEI CERT C | Unsafe string copy, signed overflow, unchecked result |
 
 Each analysis has its own source tree, build directory, C++test workspace, process, configuration and report directory. All three processes share one Automation installation, one container and the same network license service.
+
+## Current three-container design compared with the demonstration
+
+The customer described the current deployment as three C++test Standard analysis workers running in three Docker containers. The supplied artifacts show the implementation of one worker: its launch script, `cpptestcli.properties` and one console log. The comparison below assumes that this worker pattern is instantiated three times. The supplied artifacts alone do not show all three containers running concurrently or prove how many license tokens License Server charges for that topology.
+
+### What the supplied worker does
+
+One current worker:
+
+- Adds `/opt/parasoft/cpptest` to `PATH` and copies a shared `cpptestcli.properties` into the installation.
+- Starts one `cpptestcli` process with a maximum Java heap of 16 GiB.
+- Uses GCC 8 build data from `compile_commands_merged.json`.
+- Retrieves `Flow Analysis Standard` as a DTP-hosted test configuration.
+- Requests a custom network-license edition containing C++test, Automation, Static Analysis, Flow Analysis, DTP Publish and compliance-rule features.
+- Generates local XML and HTML reports and publishes results to DTP.
+- Maintains a `.cpptest` analysis cache and writes a completion marker for Jenkins.
+
+The supplied console log confirms one Docker machine identity, successful Flow Analysis of a production-sized input and successful DTP publication. It does not identify the number of simultaneous license tokens consumed.
+
+### Architecture comparison
+
+```text
+Current pattern, repeated three times
+
+Jenkins ─┬─> Docker A ─> C++test CLI A ─┐
+         ├─> Docker B ─> C++test CLI B ─┼─> DTP / License Server
+         └─> Docker C ─> C++test CLI C ─┘
+
+Demonstrated consolidated pattern
+
+Jenkins or dashboard ─> One Docker container ─┬─> C++test CLI A ─┐
+                                              ├─> C++test CLI B ─┼─> DTP / License Server
+                                              └─> C++test CLI C ─┘
+```
+
+The consolidated design still performs three analyses. It does not combine source trees into one scan and it is not one `cpptestcli` process switching between projects. It runs three independent C++test JVMs concurrently inside one container. Each process retains its own input, configuration, workspace, cache, console and report.
+
+Also, "Automation server" does not mean that DTP performs the analysis. C++test Professional Automation is the licensed command-line analysis capability installed on the execution host. DTP and License Server remain external services for licensing, shared configurations and result storage. CPU-intensive code and flow analysis still execute in the Docker container.
+
+### License handling
+
+Both designs can use the same network-license workflow:
+
+1. Each `cpptestcli` process starts and requests the configured edition and features.
+2. License Server evaluates the request against the purchased entitlement.
+3. The process runs only when the required features are valid.
+4. DTP publication is a separate operation that requires an entitled `DTP Publish` or Automation capability.
+
+The current properties explicitly enable network licensing and request a `custom_edition` that includes `Automation`. This means the existing worker is already asking License Server for Automation among its features. The names "Standard server" and "Professional Automation server" should therefore not be used as proof of different license consumption. The installed product version, returned edition, enabled features and actual License Server entitlement are the authoritative evidence.
+
+Container count and license count are not necessarily the same:
+
+- Three containers can present distinct Docker machine identities, but the supplied evidence shows only one of them.
+- The demonstrated consolidated container presented one Docker machine identity, even though it ran three scanner processes.
+- Every scanner process still performs license validation. In the demonstration, all three concurrent processes independently reported that Automation was valid.
+- That result proves concurrent authorization on the tested license. It does not prove that only one token was charged.
+- Parasoft network licenses can be floating or machine-limited, and the exact accounting can depend on the purchased license model and feature bundle.
+
+Therefore, consolidation must not be justified as "three licenses become one license" without confirmation. The customer should run three simultaneous production-representative scans while the License Server administrator records active sessions or token usage, then obtain confirmation from Parasoft that this use is contractually permitted. If only fewer concurrent tokens are available, `cpptest.license.wait.for.tokens.time` can wait for a token, but a Jenkins concurrency limit or queue is normally more predictable.
+
+Official Parasoft licensing references:
+
+- https://docs.parasoft.com/display/CPPTEST20252/Setting+the+License
+- https://docs.parasoft.com/display/CPPTEST20252/License+Settings
+
+### Technological differences
+
+| Area | Three containers | One container with three scanners |
+| --- | --- | --- |
+| C++test processes | One per container | Three independent processes in one container |
+| Installation | Usually repeated or mounted three times | One read-only installation volume shared by all processes |
+| Isolation | Container, filesystem and cgroup boundary per analysis | Process and directory isolation inside one cgroup |
+| Resource control | CPU and memory can be limited per container | Container limit covers the sum of all scanners |
+| Scheduling | Jenkins selects three workers/containers | One worker launches processes concurrently and enforces a concurrency limit |
+| Failure scope | A failed container normally affects one analysis | Container or host failure interrupts all three analyses |
+| Maintenance | Images and installations must remain aligned | One image and installation are upgraded once |
+| Scaling | Add or remove worker containers | Increase process concurrency until the host or license limit is reached |
+| Observability | Logs and metrics are naturally separated by container | Dashboard must label every PID, console, workspace and report |
+| DTP | External license, configuration and reporting service | Same external service; no analysis compute moves to DTP |
+
+### Changes required for safe consolidation
+
+The current script copies `cpptestcli.properties` into the shared installation before every run. That is acceptable when each container owns its installation, but concurrent jobs must not overwrite one shared properties file. In the consolidated design:
+
+1. Keep the C++test installation and built-in configurations read-only.
+2. Pass a separate `-settings` file to each process instead of copying over the installation-wide file.
+3. Give every process unique workspace, `.cpptest` cache, build and report directories.
+4. Give DTP publications unambiguous `dtp.project`, `build.id` and `session.tag` values. The supplied properties use one project while build and session identifiers are commented out; parallel publication should not be enabled until result identity and merge behavior are tested.
+5. Keep credentials outside the image and repository, using Docker secrets or the customer's approved secret store.
+6. Enforce a configured concurrency limit in Jenkins or the launcher.
+7. Preserve the existing completion-marker behavior per project rather than sharing one marker.
+
+The public demonstration deliberately sets `report.dtp.publish=false`. It proves concurrent analysis and licensing without writing sample findings into DTP. Concurrent publication of real customer results is a separate acceptance test.
+
+### Resource impact
+
+Consolidation removes duplicated container operating-system layers and simplifies deployment, but it does not remove scanner resource demand. CPU, memory and disk I/O are aggregated on one host and inside one container.
+
+The supplied production script allows up to 16 GiB Java heap for one scanner. Three such processes may request up to 48 GiB of heap, plus native memory, build tools, filesystem cache and container overhead. The demonstration used only 1 GiB maximum heap per scanner because its sample projects are small. Its resource measurements must not be extrapolated directly to the customer's production analysis.
+
+Before migration, run the actual three workloads concurrently and record peak memory, CPU, disk I/O, analysis duration and license usage. Size the consolidated container for the combined peak with operational headroom, or reduce concurrency and queue excess work.
+
+### Customer conclusion
+
+The demonstration proves that one C++test Professional Automation installation in one Docker container can host three isolated, concurrent C++test analyses. The principal benefit is operational consolidation: one maintained image, one mounted installation, one execution endpoint and one dashboard.
+
+The tradeoff is a larger shared failure and resource domain. It does not inherently reduce the number of simultaneous analysis entitlements, and it requires stronger process-level isolation than the existing container-per-worker pattern. Migration should proceed only after representative load testing, DTP publication validation and written confirmation of the applicable Parasoft license model.
 
 ## What the public demonstration shows
 
