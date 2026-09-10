@@ -1,6 +1,7 @@
 /.cpptest-workspaces/
 /logs/
 /reports/
+/wsl-output/
 /project-*/build/
 /.chrome-*/
 /__pycache__/

@@ -47,11 +47,21 @@ The static site in `docs/` is also published through GitHub Pages. Since GitHub 
 
 ## Direct concurrency verification
 
+Windows:
+
 ```powershell
 .\scripts\run-parallel-test.ps1
 ```
 
 The script fails unless all three scanner intervals overlap and all processes exit successfully. It writes timestamps and exit codes to `logs\parallel-test-result.json`, with reports under `reports\<project>\report.html`.
+
+WSL or Linux:
+
+```bash
+bash scripts/run-parallel-test-linux.sh
+```
+
+The Linux runner defaults to C++test under `/home/danie/parasoft/cpptest`, compiler family `gcc_13-64`, and output under `/tmp/xsightlab-automation`. Override these with `CPPTEST_HOME`, `CPPTEST_COMPILER_FAMILY`, and `OUTPUT_ROOT`. The generated `parallel-test-result.json` records overlap, license validation, file counts, rule counts, findings, durations, and exit codes.
 
 ## Local prerequisites
 
