@@ -18,9 +18,14 @@ const replayMetadata = {
 };
 
 const replayFindings = {
-  'project-alpha': [{ id: 'MISRA-C-15.6', description: 'The body of an iteration or selection statement is not compound', severity: 3 }, { id: 'MISRA-C-10.4', description: 'Operands have different essential type categories', severity: 3 }],
-  'project-beta': [{ id: 'BD-PB-NOTINIT', description: 'Avoid use before initialization', severity: 1 }, { id: 'BD-PB-NP', description: 'Avoid null pointer dereferencing', severity: 1 }, { id: 'BD-RES-LEAKS', description: 'Ensure resources are released', severity: 2 }],
-  'project-gamma': [{ id: 'CERT_C-STR31-a', description: 'Insufficient space for string data', severity: 1 }, { id: 'CERT_C-INT32-a', description: 'Signed integer operation may overflow', severity: 1 }]
+  'project-alpha': ['MISRAC2012-DIR_4_6-b', 'MISRAC2012-DIR_4_6-d', 'MISRAC2012-RULE_10_3-b', 'MISRAC2012-RULE_10_4-a', 'MISRAC2012-RULE_12_1-a', 'MISRAC2012-RULE_15_5-a', 'MISRAC2012-RULE_15_6-b', 'MISRAC2012-RULE_17_7-a', 'MISRAC2012-RULE_21_6-a'],
+  'project-beta': ['BD-PB-NOTINIT', 'BD-RES-LEAKS'],
+  'project-gamma': ['CERT_C-INT32-a', 'CERT_C-POS54-a', 'CERT_C-STR31-c', 'CERT_C-STR31-e']
+};
+const replayResults = {
+  'project-alpha': { rules: 385, findings: 26 },
+  'project-beta': { rules: 105, findings: 2 },
+  'project-gamma': { rules: 193, findings: 4 }
 };
 
 let mode = 'replay';
@@ -74,7 +79,7 @@ function render(state) {
     fragment.querySelector('.files').textContent = `${filesChecked} / ${project.filesTotal || '?'}`;
     fragment.querySelector('.rules').textContent = project.rulesConfigured || '—';
     fragment.querySelector('.findings').textContent = project.findings;
-    fragment.querySelector('.pid').textContent = project.pid ? `PID ${project.pid}` : 'waiting';
+    fragment.querySelector('.pid').textContent = mode === 'replay' ? 'replay' : (project.pid ? `PID ${project.pid}` : 'waiting');
 
     const progress = fragment.querySelector('.scan-progress span');
     if (project.status === 'running' && !project.filesChecked) progress.classList.add('indeterminate');
@@ -149,12 +154,12 @@ function updateReplay() {
     const lines = eventLines[id].slice(0, Math.min(eventLines[id].length, Math.floor(elapsed / 1.1) + 1));
     project.console = lines.map(line => `[${new Date().toLocaleTimeString()}] [${id}] ${line}`);
     project.filesChecked = Math.min(3, Math.floor(elapsed / 2));
-    project.rulesConfigured = id === 'project-alpha' ? 142 : id === 'project-beta' ? 91 : 176;
+    project.rulesConfigured = replayResults[id].rules;
     if (elapsed >= 7) {
       project.status = 'completed';
       project.filesChecked = 3;
-      project.detectedIssues = replayFindings[id];
-      project.findings = replayFindings[id].length;
+      project.detectedIssues = replayFindings[id].map(ruleId => ({ id: ruleId }));
+      project.findings = replayResults[id].findings;
       project.rulesExecuted = project.rulesConfigured;
     }
   }
@@ -199,6 +204,7 @@ async function connect() {
     modeBadge.textContent = 'PUBLIC REPLAY';
     modeBadge.className = 'mode-badge replay';
     render(currentState);
+    setTimeout(() => startRun().catch(error => console.error(error)), 500);
   }
   runButton.disabled = false;
 }
