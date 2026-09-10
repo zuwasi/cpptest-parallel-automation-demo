@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Three C/C++test Automation scans running concurrently on one server.">
+  <title>C++test Parallel Automation Lab</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">//</span>
+      <div>
+        <p class="eyebrow">CUSTOMER DEMONSTRATION</p>
+        <h1>C++test Parallel Automation Lab</h1>
+      </div>
+    </div>
+    <div class="mode-wrap">
+      <span id="modeBadge" class="mode-badge">CONNECTING</span>
+      <button id="runButton" class="run-button" type="button" disabled>Start parallel scan</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="summary" aria-label="Automation server summary">
+      <div class="summary-lead">
+        <span id="pulse" class="pulse"></span>
+        <div>
+          <strong id="parallelStatus">One server, three isolated scans</strong>
+          <span id="statusDetail">Waiting for scan</span>
+        </div>
+      </div>
+      <div class="metric"><span>Engine</span><strong>C++test Pro 2025.1</strong></div>
+      <div class="metric"><span>Toolchain</span><strong>GCC 6.3 / CMake</strong></div>
+      <div class="metric"><span>Isolation</span><strong>3 workspaces</strong></div>
+      <div class="metric"><span>License sessions</span><strong id="licenseSessions">0 / 3 valid</strong></div>
+      <div class="metric"><span>Total elapsed</span><strong id="totalElapsed">00:00</strong></div>
+    </section>
+
+    <section class="architecture" aria-label="Execution architecture">
+      <span class="architecture-node">Jenkins</span><span class="connector">→</span>
+      <span class="architecture-node primary">1 Automation Server</span><span class="connector split">→</span>
+      <span class="architecture-node">MISRA C</span>
+      <span class="architecture-node">Flow Analysis</span>
+      <span class="architecture-node">CERT C</span>
+    </section>
+
+    <section id="projectGrid" class="project-grid" aria-live="polite"></section>
+
+    <footer>
+      <span>Live mode reports only observed C++test output.</span>
+      <span id="dataNotice">Public replay uses representative demonstration data.</span>
+    </footer>
+  </main>
+
+  <template id="projectTemplate">
+    <article class="project-card">
+      <div class="card-accent"></div>
+      <header class="card-header">
+        <div>
+          <p class="project-id"></p>
+          <h2 class="project-name"></h2>
+          <span class="standard"></span>
+        </div>
+        <span class="status-pill"></span>
+      </header>
+
+      <div class="scan-progress"><span></span></div>
+      <div class="card-metrics">
+        <div><span>Elapsed</span><strong class="elapsed">00:00</strong></div>
+        <div><span>Files checked</span><strong class="files">0 / 0</strong></div>
+        <div><span>Rules in report</span><strong class="rules">0</strong></div>
+        <div><span>Detected</span><strong class="findings">0</strong></div>
+      </div>
+
+      <div class="license-row"><span class="license-dot"></span><span class="license-text">License waiting</span><span class="workspace">isolated workspace</span></div>
+
+      <section class="requirements-section">
+        <h3>Analysis requirements</h3>
+        <ul class="requirements"></ul>
+      </section>
+
+      <section class="issues-section">
+        <div class="section-heading"><h3>Known seeded issues</h3><span>source review</span></div>
+        <div class="expected-issues"></div>
+        <div class="detected"></div>
+      </section>
+
+      <section class="console-section">
+        <div class="section-heading"><h3>Live console · latest output</h3><span class="pid"></span></div>
+        <pre class="console" tabindex="0"></pre>
+      </section>
+
+      <a class="report-link" target="_blank" rel="noopener">Open C++test report <span>↗</span></a>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>

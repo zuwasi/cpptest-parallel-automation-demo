@@ -1,0 +1,14 @@
+/.cpptest-workspaces/
+/logs/
+/reports/
+/project-*/build/
+/.chrome-*/
+/__pycache__/
+/dashboard-*.png
+/dashboard-final-state.json
+/analysis-demo.log
+compiler-list.txt
+effective-settings.txt
+analysis_console_out_for_parasoft.txt
+cpptestcli_properties_for_parasoft.txt
+run_analysis_script_for_parasoft.txt
