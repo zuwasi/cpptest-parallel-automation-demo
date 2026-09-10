@@ -1,5 +1,7 @@
 # C++test Parallel Automation Lab
 
+Customer deployment and reconstruction instructions are available in [CUSTOMER_GUIDE.md](CUSTOMER_GUIDE.md).
+
 A customer-facing proof of concept for replacing two C++test Standard analysis hosts with one C++test Professional Automation host. It launches three independent analyses concurrently and visualizes their process state, Automation license activation, console output, requirements, findings, and reports.
 
 The repository is MIT licensed. Parasoft C/C++test and its rule configurations are commercial software and are not included.
