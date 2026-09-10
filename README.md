@@ -1,6 +1,6 @@
 # C++test Parallel Automation Lab
 
-Customer deployment and reconstruction instructions are available in [CUSTOMER_GUIDE.md](CUSTOMER_GUIDE.md).
+Customer deployment and reconstruction instructions are available as [Markdown](CUSTOMER_GUIDE.md) and as a [customer-ready PDF](CppTest_Parallel_Automation_Customer_Guide.pdf).
 
 A customer-facing proof of concept for consolidating multiple C++test Standard analysis workers onto one C++test Professional Automation host. It launches three independent analyses concurrently and visualizes their process state, Automation license activation, console output, requirements, findings, and reports.
 

@@ -190,7 +190,7 @@ The repository does not contain C++test binaries, Parasoft configurations, licen
 
 ## Reconstructing the Docker demonstration
 
-### 1. Prepare the server
+### Prepare the server
 
 Install the following on a Linux Docker host or a Windows server using Docker Desktop with the Linux container engine:
 
@@ -201,14 +201,14 @@ Install the following on a Linux Docker host or a Windows server using Docker De
 
 The tested image uses Ubuntu 24.04, GCC 13 and the C++test `gcc_13-64` compiler profile. Use a compiler/profile pair supported by the customer's installed C++test release.
 
-### 2. Clone the repository
+### Clone the repository
 
 ```bash
 git clone https://github.com/zuwasi/cpptest-parallel-automation-demo.git
 cd cpptest-parallel-automation-demo
 ```
 
-### 3. Create the private C++test volume
+### Create the private C++test volume
 
 Create the volume expected by `compose.yaml`:
 
@@ -225,16 +225,16 @@ tar -C /home/customer/parasoft -cf - cpptest \
       ubuntu:24.04 tar -C /opt/parasoft -xf -
 ```
 
-For the reference Windows server, the source installation was in the Ubuntu WSL distribution:
+For a Windows server where the source installation is stored in an Ubuntu WSL distribution:
 
 ```powershell
 docker volume create cpptest-linux-2025-2
-cmd /c "wsl.exe tar -C /home/danie/parasoft -cf - cpptest | docker run --rm -i -v cpptest-linux-2025-2:/opt/parasoft ubuntu:24.04 tar -C /opt/parasoft -xf -"
+cmd /c "wsl.exe tar -C /home/customer/parasoft -cf - cpptest | docker run --rm -i -v cpptest-linux-2025-2:/opt/parasoft ubuntu:24.04 tar -C /opt/parasoft -xf -"
 ```
 
 The volume may contain license configuration and credentials. Restrict Docker access, do not export the volume and never commit its contents.
 
-### 4. Configure licensing
+### Configure licensing
 
 Configure C++test to use the customer's DTP License Server according to the organization's Parasoft deployment policy. Confirm that:
 
@@ -245,7 +245,7 @@ Configure C++test to use the customer's DTP License Server according to the orga
 
 Do not place passwords or license-server credentials in the repository, Dockerfile or Compose file. Keep them in the private installation volume or an approved secret-management mechanism.
 
-### 5. Build and start the container
+### Build and start the container
 
 ```bash
 docker compose up -d --build
@@ -257,7 +257,7 @@ http://localhost:8876
 
 The header must show `LIVE SERVER`, `C++test Pro 2025.2`, `GCC 13.3 / CMake`, and `Docker` followed by the container ID.
 
-### 6. Run the demonstration
+### Run the demonstration
 
 Select **Start parallel scan**. The expected progression is:
 
@@ -267,7 +267,7 @@ Select **Start parallel scan**. The expected progression is:
 4. Three consoles stream different configurations and source files.
 5. Every card completes and exposes its generated report.
 
-### 7. Verify Docker independently
+### Verify Docker independently
 
 Run these commands while the dashboard shows all three analyses as running:
 
@@ -289,7 +289,7 @@ Acceptance evidence should include:
 - Three valid Automation license messages.
 - Three successful exit codes and report files.
 
-### 8. Stop or reset the demonstration
+### Stop or reset the demonstration
 
 Stop the container without deleting reports:
 
@@ -333,7 +333,7 @@ The reference configuration sets `report.dtp.publish=false` so the proof does no
 
 ## Production migration considerations
 
-The demonstration proves technical concurrency, not production capacity or contractual entitlement. Before replacing the two existing Standard servers:
+The demonstration proves technical concurrency, not production capacity or contractual entitlement. Before replacing the existing Standard workers:
 
 1. Confirm the Automation license model and concurrency terms with Parasoft or the organization's license administrator.
 2. Test representative production codebases, not only the small samples.
