@@ -107,6 +107,8 @@ The current script copies `cpptestcli.properties` into the shared installation b
 
 The public demonstration deliberately sets `report.dtp.publish=false`. It proves concurrent analysis and licensing without writing sample findings into DTP. Concurrent publication of real customer results is a separate acceptance test.
 
+A sanitized implementation example is available in `examples/customer-settings/`. It preserves the active license, DTP, analysis, compiler and reporting settings from the supplied file, retains optional settings as comments and demonstrates three independent `-settings` files without modifying the shared installation.
+
 ### Resource impact
 
 Consolidation removes duplicated container operating-system layers and simplifies deployment, but it does not remove scanner resource demand. CPU, memory and disk I/O are aggregated on one host and inside one container.
@@ -185,6 +187,7 @@ https://github.com/zuwasi/cpptest-parallel-automation-demo
 | `Dockerfile` | Ubuntu runtime containing only open-source prerequisites |
 | `compose.yaml` | One-container topology and private volume mounts |
 | `Jenkinsfile` | Windows Jenkins parallel-stage example |
+| `examples/customer-settings/` | Sanitized mapping of the supplied properties and launch process |
 
 The repository does not contain C++test binaries, Parasoft configurations, license credentials, DTP credentials or generated customer reports.
 

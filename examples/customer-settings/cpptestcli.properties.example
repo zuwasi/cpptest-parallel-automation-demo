@@ -1,0 +1,62 @@
+# Copy this file once per concurrently analyzed project and replace every
+# <PLACEHOLDER>. Keep the completed files outside the repository.
+
+# License and EULA
+parasoft.eula.accepted=true
+cpptest.license.use_network=true
+cpptest.license.network.edition=custom_edition
+cpptest.license.custom_edition_features=C++test,Static Analysis,Flow Analysis,Unit Test,Coverage,Automation,DTP Publish,Desktop Command Line,AUTOSAR Rules,CWE Rules,DISA STIG Rules,HIC++ Rules,JSF Rules,MISRA Rules,MISRA C 2012 Rules,OWASP Rules,Security Rules,SEI CERT C Rules,SEI CERT C++ Rules,Code Dependency Export
+
+# DTP connection and project identity
+dtp.enabled=true
+dtp.url=<DTP_URL>
+dtp.user=<DTP_USER>
+dtp.password=<ENCODED_DTP_PASSWORD>
+dtp.project=<DTP_PROJECT>
+
+# Analysis configuration and compiler
+cpptest.configuration=c++test.dtp://Flow Analysis Standard
+cpptest.compiler.family=gcc_8-64
+
+# DTP reporting. BUILD_ID and SESSION_TAG must distinguish concurrent runs.
+report.dtp.publish=true
+build.id=<BUILD_ID>
+session.tag=<SESSION_TAG>
+
+# Console output
+console.verbosity.level=high
+
+# Optional settings retained from the supplied knowledge file. Enable only the
+# options required by the customer's workflow and map paths into the container.
+
+# report.authors_details=true
+# report.contexts_details=true
+# report.associations=true
+# report.coverage.images=<DTP_PROJECT>;<DTP_PROJECT>_Unit Test
+
+# report.mail.enabled=true
+# report.mail.server=<MAIL_SERVER>
+# report.mail.domain=<MAIL_DOMAIN>
+# report.mail.from=<MAIL_SENDER>
+# report.mail.subject=<MAIL_SUBJECT>
+
+# scope.scontrol=true
+# report.scontrol=min
+# scontrol.rep1.type=git
+# scontrol.rep1.git.url=<GIT_URL>
+# scontrol.rep1.git.branch=<GIT_BRANCH>
+# scontrol.rep1.git.workspace=/work/source
+# scontrol.git.exec=/usr/bin/git
+
+# flowanalysis.storage.enabled=true
+# flowanalysis.storage.path.mappings=WORKING_DIR=/work/source
+# flowanalysis.storage.additional.locations=/results/<PROJECT_NAME>/flow-storage
+# flowanalysis.storage.read.additional.data=*
+# flowanalysis.storage.uptodate.check.dirs=/work/source
+
+# file.encoding.mode=user
+# file.encoding.name=UTF-8
+
+# techsupport.enabled=true
+# techsupport.create.on.exit=true
+# techsupport.archive.location=/results/<PROJECT_NAME>/technical-support
