@@ -1,7 +1,10 @@
 from __future__ import annotations
 
 import json
+import os
+import platform
 import re
+import socket
 import subprocess
 import threading
 import time
@@ -14,7 +17,11 @@ from urllib.parse import urlparse
 
 ROOT = Path(__file__).resolve().parent
 DOCS = ROOT / "docs"
-PORT = 8765
+HOST = os.environ.get("DASHBOARD_HOST", "127.0.0.1")
+PORT = int(os.environ.get("DASHBOARD_PORT", "8765"))
+IS_WINDOWS = os.name == "nt"
+CONTAINERIZED = Path("/.dockerenv").exists()
+LINUX_OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/tmp/xsightlab-automation"))
 
 PROJECTS = {
     "project-alpha": {
@@ -74,6 +81,14 @@ state = {
     "running": False,
     "runStartedAt": None,
     "runEndedAt": None,
+    "runtime": {
+        "containerized": CONTAINERIZED,
+        "containerId": socket.gethostname() if CONTAINERIZED else None,
+        "platform": platform.system(),
+        "platformRelease": platform.release(),
+        "engine": os.environ.get("CPPTEST_DISPLAY_VERSION", "C++test Pro 2025.1"),
+        "toolchain": os.environ.get("TOOLCHAIN_DISPLAY_VERSION", "GCC 6.3 / CMake"),
+    },
     "projects": {project_id: new_project_state(project_id) for project_id in PROJECTS},
 }
 
@@ -114,8 +129,14 @@ def update_from_line(project_id: str, line: str) -> None:
             project["findings"] = int(match.group(1))
 
 
+def report_directory(project_id: str) -> Path:
+    if IS_WINDOWS:
+        return ROOT / "reports" / project_id
+    return LINUX_OUTPUT_ROOT / project_id / "report"
+
+
 def parse_report(project_id: str) -> None:
-    report = ROOT / "reports" / project_id / "report.xml"
+    report = report_directory(project_id) / "report.xml"
     if not report.exists():
         return
 
@@ -149,21 +170,21 @@ def parse_report(project_id: str) -> None:
 
 
 def run_project(project_id: str) -> None:
-    script = ROOT / "scripts" / "run-analysis.ps1"
-    command = [
-        "powershell.exe",
-        "-NoProfile",
-        "-ExecutionPolicy",
-        "Bypass",
-        "-File",
-        str(script),
-        "-Project",
-        project_id,
-    ]
+    if IS_WINDOWS:
+        command = [
+            "powershell.exe", "-NoProfile", "-ExecutionPolicy", "Bypass",
+            "-File", str(ROOT / "scripts" / "run-analysis.ps1"), "-Project", project_id,
+        ]
+        environment = None
+    else:
+        command = ["bash", str(ROOT / "scripts" / "run-analysis-linux.sh"), project_id]
+        environment = os.environ.copy()
+        environment["OUTPUT_ROOT"] = str(LINUX_OUTPUT_ROOT)
     started = time.time()
     process = subprocess.Popen(
         command,
         cwd=ROOT,
+        env=environment,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,
         text=True,
@@ -234,8 +255,13 @@ class DashboardHandler(SimpleHTTPRequestHandler):
             self.send_json(payload)
             return
         if path.startswith("/reports/"):
-            report = (ROOT / path.lstrip("/")).resolve()
-            if ROOT.resolve() not in report.parents or not report.is_file():
+            parts = path.strip("/").split("/")
+            if len(parts) != 3 or parts[1] not in PROJECTS:
+                self.send_error(404)
+                return
+            report_root = report_directory(parts[1]).resolve()
+            report = (report_root / parts[2]).resolve()
+            if report_root not in report.parents or not report.is_file():
                 self.send_error(404)
                 return
             body = report.read_bytes()
@@ -264,4 +290,4 @@ class DashboardHandler(SimpleHTTPRequestHandler):
 
 if __name__ == "__main__":
     print(f"C++test parallel dashboard: http://localhost:{PORT}")
-    ThreadingHTTPServer(("127.0.0.1", PORT), DashboardHandler).serve_forever()
+    ThreadingHTTPServer((HOST, PORT), DashboardHandler).serve_forever()

@@ -1,0 +1,18 @@
+services:
+  automation:
+    build: .
+    image: cpptest-parallel-demo:local
+    container_name: cpptest-parallel-demo
+    ports:
+      - "8876:8765"
+    volumes:
+      - .:/workspace:ro
+      - cpptest-install:/opt/parasoft:ro
+      - cpptest-results:/results
+
+volumes:
+  cpptest-install:
+    external: true
+    name: cpptest-linux-2025-2
+  cpptest-results:
+    name: cpptest-parallel-results

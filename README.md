@@ -45,6 +45,36 @@ Open `http://localhost:8765`. Select **Start parallel scan** to launch the three
 
 The static site in `docs/` is also published through GitHub Pages. Since GitHub Pages cannot run a licensed local scanner, it switches to a clearly labeled **Public Replay** mode with representative data. Replay values are not presented as live scanner evidence.
 
+## Docker demonstration
+
+The live dashboard can run inside one Docker container and launches all three scanner processes in that same container. It detects `/.dockerenv` and displays the container hostname/ID, Linux platform, C++test version, toolchain, scanner PIDs, license state, console output, and reports.
+
+![Three C++test processes running in one Docker container](docs/docker-live-proof.png)
+
+The image intentionally excludes commercial Parasoft software. On the reference machine, the existing WSL installation is streamed once into a private local Docker volume:
+
+```powershell
+docker volume create cpptest-linux-2025-2
+cmd /c "wsl.exe tar -C /home/danie/parasoft -cf - cpptest | docker run --rm -i -v cpptest-linux-2025-2:/opt/parasoft ubuntu:24.04 tar -C /opt/parasoft -xf -"
+```
+
+The volume can contain license credentials. Keep it private and never publish or export it. Build and start the dashboard container:
+
+```powershell
+docker compose up -d --build
+Start-Process http://localhost:8876
+```
+
+Select **Start parallel scan**. Independent command-line evidence is available while the scan runs:
+
+```powershell
+docker top cpptest-parallel-demo -eo pid,ppid,comm,args
+docker stats cpptest-parallel-demo --no-stream
+docker inspect cpptest-parallel-demo
+```
+
+The verified Docker run observed three C++test JVMs, three valid Automation sessions, and a 24-second interval when all scanners overlapped. All three exited successfully with findings 26, 2, and 4.
+
 ## Direct concurrency verification
 
 Windows:

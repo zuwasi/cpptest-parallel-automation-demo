@@ -36,6 +36,7 @@ set +e
     -property bdf.import.c.compiler.exec=/usr/bin/gcc \
     -property bdf.import.cpp.compiler.exec=/usr/bin/g++ \
     -property bdf.import.linker.exec=/usr/bin/gcc \
+    -property parasoft.eula.accepted=true \
     -property report.dtp.publish=false \
     -property console.verbosity.level=high
 exit_code=$?

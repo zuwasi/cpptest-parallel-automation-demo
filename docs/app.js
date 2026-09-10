@@ -48,7 +48,13 @@ function makeReplayState(running) {
       console: [`[${id}] Ready. Configuration: ${replayMetadata[id].config}`]
     };
   }
-  return { mode: 'replay', running, runStartedAt: running ? Date.now() / 1000 : null, projects };
+  return {
+    mode: 'replay', running, runStartedAt: running ? Date.now() / 1000 : null,
+    runtime: {
+      containerized: true, containerId: 'public-replay', platform: 'Linux',
+      engine: 'C++test Pro 2025.1', toolchain: 'GCC 6.3 / CMake'
+    }, projects
+  };
 }
 
 function formatTime(seconds) {
@@ -132,6 +138,11 @@ function render(state) {
 
   document.querySelector('#licenseSessions').textContent = `${validLicenses} / 3 valid`;
   document.querySelector('#totalElapsed').textContent = formatTime(maxElapsed);
+  document.querySelector('#engine').textContent = state.runtime?.engine || 'C++test Pro';
+  document.querySelector('#toolchain').textContent = state.runtime?.toolchain || 'GCC / CMake';
+  document.querySelector('#runtime').textContent = state.runtime?.containerized
+    ? `Docker · ${state.runtime.containerId.slice(0, 12)}`
+    : `${state.runtime?.platform || 'Host'} · 3 workspaces`;
   document.querySelector('#pulse').classList.toggle('running', state.running);
   document.querySelector('#parallelStatus').textContent = state.running ? `${runningCount} scans executing concurrently` : 'One server, three isolated scans';
   document.querySelector('#statusDetail').textContent = state.running ? 'Independent processes, workspaces, configurations and reports' : 'Ready for the next parallel run';

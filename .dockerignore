@@ -1,0 +1,12 @@
+.git
+.chrome-*
+.cpptest-workspaces
+__pycache__
+logs
+reports
+wsl-output
+project-alpha/build
+project-beta/build
+project-gamma/build
+dashboard-*.png
+analysis-demo.log
