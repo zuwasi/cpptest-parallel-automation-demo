@@ -7,7 +7,7 @@ This example maps the supplied `cpptestcli.properties` knowledge to isolated set
 - The settings file is passed with `-settings`; it is never copied into the shared C++test installation.
 - The DTP test configuration and GCC 8 compiler selection are settings-file values instead of command-line overrides.
 - `dtp.project`, `build.id` and `session.tag` are explicit so parallel DTP publications can be identified correctly.
-- Each process receives a separate C++test workspace, report directory and completion marker.
+- Each process runs from a separate source checkout with its own `.cpptest` cache, report directory and completion marker.
 - The original 16 GiB maximum Java heap remains the default, but can be changed with `CPPTEST_MAX_HEAP`.
 - Optional mail, source-control, report, encoding, technical-support and Flow Analysis storage knowledge remains available as commented settings.
 
@@ -47,5 +47,7 @@ set -e
 ```
 
 With `-fail`, C++test may return nonzero when policy violations are found; that is different from an incomplete run. Exit code 137 is treated as an incomplete run and does not create a completion marker.
+
+C++test Standard does not support the Professional-only `-data` workspace option. It stores `.cpptest` state and a lock under the current working directory. Never launch concurrent Standard scans from the same checkout; the second process will exit because that cache is locked.
 
 Before enabling parallel DTP publication in production, verify result separation and license usage with the DTP and License Server administrators.

@@ -32,6 +32,22 @@ One current worker:
 
 The supplied console log confirms one Docker machine identity, successful Flow Analysis of a production-sized input and successful DTP publication. It does not identify the number of simultaneous license tokens consumed.
 
+### Verified with standalone C++test Standard on WSL
+
+The exact `parasoft_cpptest_standard-2026.1.3-linux.x86_64.tar.gz` distribution was installed separately in WSL and tested against the existing DTP License Server on September 14, 2026. DTP report publication was disabled during the test.
+
+Three Standard `cpptestcli` processes ran concurrently from three isolated temporary worktrees:
+
+| Configuration | Files checked | Rules in report | Findings | Exit code |
+| --- | ---: | ---: | ---: | ---: |
+| MISRA C 2023 | 2 | 385 | 22 | 0 |
+| Flow Analysis Standard | 2 | 105 | 2 | 0 |
+| SEI CERT C Rules | 2 | 193 | 4 | 0 |
+
+All three processes independently activated `Automation Compliance Edition`, reported `Automation feature: License is valid` and overlapped for 8.63 seconds. A process snapshot showed three C++test Java processes with three distinct working directories.
+
+The test also established an important Standard-specific constraint. Standard rejects the Professional-only `-data` option and keeps its writable `.cpptest` cache and lock under the current working directory. When three processes were deliberately started from one directory, two exited with code 131 because the cache was locked. Parallel Standard execution therefore requires a separate checkout or worktree, `.cpptest` cache and report path for every process.
+
 ### Architecture comparison
 
 ```text
@@ -99,7 +115,7 @@ The current script copies `cpptestcli.properties` into the shared installation b
 
 1. Keep the C++test installation and built-in configurations read-only.
 2. Pass a separate `-settings` file to each process instead of copying over the installation-wide file.
-3. Give every process unique workspace, `.cpptest` cache, build and report directories.
+3. For C++test Standard, run each process from a separate checkout or worktree with its own `.cpptest` cache, build and report directories. C++test Professional can additionally isolate its Eclipse workspace with `-data`.
 4. Give DTP publications unambiguous `dtp.project`, `build.id` and `session.tag` values. The supplied properties use one project while build and session identifiers are commented out; parallel publication should not be enabled until result identity and merge behavior are tested.
 5. Keep credentials outside the image and repository, using Docker secrets or the customer's approved secret store.
 6. Enforce a configured concurrency limit in Jenkins or the launcher.

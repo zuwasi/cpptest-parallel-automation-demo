@@ -23,16 +23,16 @@ if [[ ! -f "$source_root/compile_commands_merged.json" ]]; then
     exit 2
 fi
 
-rm -rf "$run_root/workspace" "$run_root/report"
-mkdir -p "$run_root/workspace" "$run_root/report"
+rm -rf "$run_root/report"
+mkdir -p "$run_root/report"
 rm -f "$run_root/.cpptest_analysis_complete"
 
+cd "$source_root"
 set +e
 "$cpptest_home/cpptestcli" \
     "-J-Xmx$max_heap" \
     -settings "$settings_file" \
-    -data "$run_root/workspace" \
-    -module "$source_root" \
+    -module . \
     -input "$source_root/compile_commands_merged.json" \
     -report "$run_root/report" \
     -fail
