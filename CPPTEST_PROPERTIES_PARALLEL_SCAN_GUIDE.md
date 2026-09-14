@@ -6,13 +6,11 @@ This guide shows how to reuse the existing `cpptestcli.properties` knowledge whe
 
 The properties migration is not a product reconfiguration. Most settings are copied unchanged. The important changes are:
 
-::: keep
 1. Give each scan its own completed properties file.
 2. Mount those files read-only and select one with `-settings`.
 3. Give each scan a distinct DTP project/build/session identity as appropriate.
 4. Run each scan from a separate checkout or worktree so its `.cpptest` cache is private.
 5. Keep reports and completion markers in separate output directories.
-:::
 
 ## 1. A simple model
 
@@ -71,11 +69,8 @@ Commented lines are reference options, not requirements. Leave them commented un
 
 Enabling every documented option makes the file harder to maintain and may introduce unnecessary paths or credentials. Start with the active minimum and add an option only when a job needs it.
 
-<div class="page-break"></div>
-
 ## 3. Recommended files
 
-::: keep
 Create the files from the sanitized repository template:
 
 ```bash
@@ -87,7 +82,6 @@ install -m 600 examples/customer-settings/cpptestcli.properties.example \
 install -m 600 examples/customer-settings/cpptestcli.properties.example \
   /run/secrets/cpptest/cert.properties
 ```
-:::
 
 Replace every `<PLACEHOLDER>`. Do not commit completed files. An encoded password is still a credential.
 
@@ -183,7 +177,6 @@ printf 'MISRA=%s FLOW=%s CERT=%s\n' \
   "$result_misra" "$result_flow" "$result_cert"
 ```
 
-::: keep
 The launcher:
 
 - changes directory to the selected source checkout;
@@ -195,7 +188,6 @@ The launcher:
 - treats exit code 137 as an incomplete run.
 
 With `-fail`, a completed scan can return a nonzero code because findings violated policy. That is different from termination or an incomplete cache.
-:::
 
 ## 5. Docker requirements
 
